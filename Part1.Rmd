@@ -1,0 +1,76 @@
+---
+title: "Simulation Exercise"
+author: "Nick Orka"
+date: "10/29/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+set.seed(19730509)
+```
+
+## Overview
+
+In this project you will investigate the exponential distribution in R and compare it with the Central Limit Theorem.
+
+## Simulations
+
+```{r sumulation}
+lambda <- 0.2
+vals <- 40
+n <- 1000
+distr <- matrix(data = rexp(vals * n, lambda), nrow = n)
+distr_means <- data.frame(means = apply(distr, 1, mean))
+```
+```{r echo=FALSE}
+# plot the means
+g <- ggplot(data = distr_means) + 
+  geom_histogram(binwidth=0.1, mapping = aes(x=means), size=1) +   
+  scale_x_continuous(breaks=round(seq(min(distr_means$means), max(distr_means$means), by=1))) + 
+  labs(x = "Sample Means")
+```
+
+### Sample vs. Theoretical mean
+
+```{r t_mean, echo=FALSE}
+t_mu <- 1 / lambda
+s_mu <- mean(distr_means$means)
+print(paste(s_mu, "vs.", t_mu))
+```
+
+```{r echo=FALSE}
+g + geom_vline(xintercept = t_mu, colour = "blue", size = 3) +
+  annotate("text", x = t_mu, y=-2, hjust = -0.1, label = "Theoretical Mean")
+```
+
+### Sample vs. Theoretical variance
+
+``` {r variance, echo=FALSE}
+t_sd <- 1 / lambda / sqrt(vals)
+s_sd <- sd(distr_means$means)
+t_var <- t_sd ^ 2
+s_var <- s_sd ^ 2
+paste("Sample vs. Theoretical standard deviation is", s_sd, "vs.", t_sd)
+paste("Sample vs. Theoretical standard variance is", s_var, "vs.", t_var)
+```
+As you can see the standard deviations are very close
+Since variance is the square of the standard deviations, minor differnces will we enhanced, but are still pretty close.
+
+### Distribution
+
+Comparing the population means & standard deviation with a normal distribution of the expected values. Added lines for the calculated and expected means
+
+```{r echo=FALSE, warning=FALSE}
+# plot the means
+ggplot(data = distr_means, aes(x = means)) + 
+  geom_histogram(binwidth=0.1, aes(y=..density..), alpha=0.2) + 
+  geom_vline(xintercept = t_mu, size=1, colour="#CC0000") + 
+  geom_density(colour="blue", size=1) +
+  geom_vline(xintercept = s_mu, size=1, colour="#0000CC") + 
+  scale_x_continuous(breaks=seq(t_mu-3,t_mu+3,1), limits=c(t_mu-3,t_mu+3)) + 
+  stat_function(fun = dnorm, args = list(mean = t_mu , sd = t_sd), colour = "red", size=1)
+```
+
+As you can see from the graph, the calculated distribution of means of random sampled exponantial distributions, overlaps quite nice with the normal distribution with the expected values based on the given lamba
