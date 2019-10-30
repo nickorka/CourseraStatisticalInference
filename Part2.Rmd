@@ -1,0 +1,64 @@
+---
+title: "Basic Inferential Data Analysis"
+author: "Nick Orka"
+date: "10/29/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+```
+## Data description
+The response is the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, orange juice or ascorbic acid (a form of vitamin C and coded as VC).
+
+```{r summary}
+str(ToothGrowth)
+summary(ToothGrowth)
+```
+It looks like there are two dimensions (supplement and dosage) and one meassurement (length). Let's take a look at the groups combinations:
+```{r groupping, echo = FALSE}
+aggr <- ToothGrowth %>% group_by(supp, dose) %>% summarise(subj_count = n(), mu = mean(len, na.rm = TRUE), sd = sd(len, na.rm = TRUE))
+aggr
+```
+```{r plot, echo=FALSE, warning=FALSE}
+g <- ggplot(data = aggr) +
+  geom_line(aes(x=dose, y=mu, color=supp), size=2, label = "mu") +
+  geom_line(aes(x=dose, y=mu-sd, color=supp, label = "min sd")) +
+  geom_line(aes(x=dose, y=mu+sd, color=supp, label = "max sd")) 
+g
+```
+
+## Null Hypotesis - The supplement is more irrelevant the bigger dosage is.
+
+```{r datasets}
+OJ05 <- filter(ToothGrowth, supp == "OJ" & dose == 0.5)
+OJ10 <- filter(ToothGrowth, supp == "OJ" & dose == 1.0)
+OJ20 <- filter(ToothGrowth, supp == "OJ" & dose == 2.0)
+VC05 <- filter(ToothGrowth, supp == "VC" & dose == 0.5)
+VC10 <- filter(ToothGrowth, supp == "VC" & dose == 1.0)
+VC20 <- filter(ToothGrowth, supp == "VC" & dose == 2.0)
+```
+
+### Dose 0.5
+
+```{r t_test_05}
+t.test(OJ05$len, VC05$len)
+```
+
+### Dose 1.0
+
+```{r t_test_10}
+t.test(OJ10$len, VC10$len)
+```
+
+### Dose 2.0
+
+```{r t_test_20}
+t.test(OJ20$len, VC20$len)
+```
+
+## Conclustion
+
+As we can see Dose 0.5 and Dose 1.0 have significant difference in teeth growth with p_values 0.0064 and 0.001 respectively. But picture totally changes for Dose 2.0 where it’s doesn’t matter what supplements we are using the progress is pretty similar with p-value 0.934. The supplement used for the teeth grows is less relevant the bigger dosage. OJ gives more precise result with less variance then VC.
